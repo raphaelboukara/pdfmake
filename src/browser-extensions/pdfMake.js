@@ -1,10 +1,10 @@
 /* jslint node: true */
 /* jslint browser: true */
-/* global saveAs */
 /* global BlobBuilder */
 'use strict';
 
 var PdfPrinter = require('../printer');
+var saveAs = require('../../libs/fileSaver');
 
 var defaultClientFonts = {
 	Roboto: {
@@ -34,9 +34,16 @@ Document.prototype._createDoc = function(options, callback) {
 	});
 	doc.on('end', function() {
 		result = Buffer.concat(chunks);
-		callback(result);
+		callback(result, doc._pdfMakePages);
 	});
 	doc.end();
+};
+
+Document.prototype._getPages = function(options, cb){
+  if (!cb) throw 'getBuffer is an async method and needs a callback argument';
+  this._createDoc(options, function(ignoreBuffer, pages){
+    cb(pages);
+  });
 };
 
 Document.prototype.open = function(message) {
@@ -50,7 +57,7 @@ Document.prototype.open = function(message) {
 		});
 	} catch(e) {
 		win.close();
-		return false;
+		throw e;
 	}
 };
 
@@ -73,14 +80,12 @@ Document.prototype.print = function() {
   }, { autoPrint: true });
 };
 
-Document.prototype.download = function(defaultFileName) {
-	defaultFileName = defaultFileName || 'file.pdf';
-	this.getBuffer(function(result) {
-		saveAs(new Blob([result], {type: 'application/pdf'}), defaultFileName);
-	});
-};
-
 Document.prototype.download = function(defaultFileName, cb) {
+   if(typeof defaultFileName === "function") {
+      cb = defaultFileName;
+      defaultFileName = null;
+   }
+
    defaultFileName = defaultFileName || 'file.pdf';
    this.getBuffer(function(result) {
        saveAs(new Blob([result], {type: 'application/pdf'}), defaultFileName);
@@ -106,7 +111,9 @@ Document.prototype.getDataUrl = function(cb, options) {
 
 Document.prototype.getBuffer = function(cb, options) {
 	if (!cb) throw 'getBuffer is an async method and needs a callback argument';
-	this._createDoc(options, cb);
+	this._createDoc(options, function(buffer){
+    cb(buffer);
+  });
 };
 
 module.exports = {

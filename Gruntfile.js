@@ -52,9 +52,13 @@ module.exports = function(grunt) {
 			test: {
 				options: {
 					reporter: '<%= (grunt.option("cc") ? "html-cov" : "spec") %>',
-				},
-				src: ['tests/**/*.js'],
-			}
+				}
+			},
+      options: {
+        files: 'tests',
+        recursive: true,
+        'check-leaks': true
+      }
 		},
 
 		jsdoc: {
@@ -74,11 +78,10 @@ module.exports = function(grunt) {
 		browserify: {
 			build: {
 				options: {
-					standalone: 'pdfMake',
-					alias: './src/browser-extensions/virtual-fs.js:fs'
-				},
-				files: {
-					'build/pdfmake.js': ['src/browser-extensions/pdfMake.js']
+					require: ['./src/browser-extensions/virtual-fs.js:fs', './src/browser-extensions/pdfMake.js:pdfMake'],
+					browserifyOptions: {
+						standalone: 'pdfMake'
+					}
 				}
 			}
 		},
@@ -92,16 +95,6 @@ module.exports = function(grunt) {
 				files: {
 					'build/vfs_fonts.js': ['examples/fonts/*' ]
 				}
-			}
-		},
-
-		concat: {
-			options: {
-				separator: ';'
-			},
-			dist: {
-				src: ['build/pdfmake.js', 'libs/fileSaver.js'],
-				dest: 'build/pdfmake.js'
 			}
 		},
 
@@ -132,10 +125,16 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-dump-dir');
 	grunt.loadNpmTasks('grunt-contrib-concat');
 
-	grunt.registerTask('test', [ 'replace:exposeTestMethods', 'jshint', 'mochacov', 'replace:hideTestMethods' ]);
+	grunt.registerTask('test', [ 'replace:fixPdfKit', 'replace:exposeTestMethods', 'jshint', 'mochacov', 'replace:hideTestMethods' ]);
 
-	grunt.registerTask('buildFonts', [ 'dump_dir' ]);
-	grunt.registerTask('build', [ 'replace:fixPdfKit', 'browserify', 'concat', 'uglify', 'buildFonts' ]);
+	grunt.registerTask('fixVfsFonts', 'Adds semicolon to the end of vfs_fonts.js', function () {
+	      var file = grunt.file.read('build/vfs_fonts.js');
+	      file += ";";
+	      grunt.file.write('build/vfs_fonts.js', file);
+  	});
+
+	grunt.registerTask('buildFonts', [ 'dump_dir', 'fixVfsFonts' ]);
+	grunt.registerTask('build', [ 'replace:fixPdfKit', 'browserify', 'uglify', 'buildFonts' ]);
 
 	grunt.registerTask('default', [ 'test', 'build' ]);
 };

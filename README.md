@@ -29,14 +29,12 @@ Check out [the playground](http://bpampuch.github.io/pdfmake/playground.html)
 
 ## Getting Started
 
-*warning! links to the documentation do NOT work yet*
-
 This document will walk you through the basics of pdfmake and will show you how to create PDF files in the browser. If you're interested in server-side printing check the examples folder.
 
 To begin with the default configuration, you should include two files:
 
 * **pdfmake.min.js**,
-* **vfs_fonts.js** - default font definition (it contains Roboto, you can however [use custom fonts instead](CustomFonts))
+* **vfs_fonts.js** - default font definition (it contains Roboto, you can however [use custom fonts instead](https://github.com/bpampuch/pdfmake/wiki/Custom-Fonts---client-side))
 
 ```html
 <!doctype html>
@@ -126,7 +124,7 @@ var docDefinition = {
       bold: true
     },
     anotherStyle: {
-      italic: true,
+      italics: true,
       alignment: 'right'
     }
   }
@@ -161,6 +159,11 @@ var docDefinition = {
           // fixed width
           width: 100,
           text: 'Third column'
+        },
+        {
+          // % width
+          width: '20%',
+          text: 'Fourth column'
         }
       ],
       // optional space between columns
@@ -433,6 +436,19 @@ If you set ```pageSize``` to a string, you can use one of the following values:
 * 'SRA0', 'SRA1', 'SRA2', 'SRA3', 'SRA4',
 * 'EXECUTIVE', 'FOLIO', 'LEGAL', 'LETTER', 'TABLOID'
 
+To change page orientation within a document, add a page break with the new page orientation.
+
+```js
+{
+  pageOrientation: 'portrait',
+  content: [
+    {text: 'Text on Portrait'},
+    {text: 'Text on Landscape', pageOrientation: 'landscape', pageBreak: 'before'},
+    {text: 'Text on Landscape 2', pageOrientation: 'portrait', pageBreak: 'after'},
+    {text: 'Text on Portrait 2'},
+  ]
+}
+```
 
 ## Coming soon
 Hmmm... let me know what you need ;)
@@ -453,4 +469,3 @@ MIT
 pdfmake is based on a truly amazing library pdfkit.org - credits to @devongovett
 
 big thanks to @yelouafi for making this library even better
-
